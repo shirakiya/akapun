@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  akapun:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: akapun
+    container_name: akapun
+    working_dir: /go/src/
+    volumes:
+      - .:/go/src/
+    environment:
+      - RUN_CONTEXT=
