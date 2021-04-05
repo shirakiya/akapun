@@ -1,6 +1,9 @@
 linters-settings:
   misspell:
     locale: US
+  funlen:
+    lines: 100
+    statements: 50
 
 linters:
   disable-all: true

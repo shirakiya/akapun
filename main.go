@@ -83,7 +83,12 @@ func (rec AkashiRecorder) Do(ctx context.Context, cType ClickType) error {
 
 	url := rec.buildURL()
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonParams))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonParams))
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -97,7 +102,7 @@ func (rec AkashiRecorder) Do(ctx context.Context, cType ClickType) error {
 	fmt.Println(string(body))
 
 	status := resp.StatusCode
-	if status != 200 {
+	if status != http.StatusOK {
 		return fmt.Errorf("status code was not 200: %d", status)
 	}
 
@@ -108,7 +113,7 @@ func (rec AkashiRecorder) Do(ctx context.Context, cType ClickType) error {
 	}
 
 	if !ar.Success {
-		return errors.New("Something error from Akashi")
+		return errors.New("something error from Akashi")
 	}
 
 	return nil

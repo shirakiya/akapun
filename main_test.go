@@ -30,6 +30,7 @@ func TestIoTClickEventCanParseEventJSON(t *testing.T) {
 	}
 }
 
+// nolint:funlen
 func TestAkashiRecorder_Do(t *testing.T) {
 	ctx := context.Background()
 
@@ -141,7 +142,7 @@ func TestAkashiRecorder_Do(t *testing.T) {
 					"type":     float64(11),
 					"timezone": "+09:00",
 				},
-				errMsg: "Something error from Akashi",
+				errMsg: "something error from Akashi",
 			},
 		},
 	} {
@@ -171,7 +172,10 @@ func TestAkashiRecorder_Do(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.arrange.statusCode)
-				w.Write(tt.arrange.respBody)
+
+				if _, err = w.Write(tt.arrange.respBody); err != nil {
+					t.Fatal(err)
+				}
 			}))
 			defer ts.Close()
 
@@ -191,6 +195,7 @@ func TestAkashiRecorder_Do(t *testing.T) {
 	}
 }
 
+// nolint:funlen
 func TestAkapun_HandleRequest(t *testing.T) {
 	ctx := context.Background()
 
