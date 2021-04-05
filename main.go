@@ -1,19 +1,163 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func HandleRequest(ctx context.Context, event events.IoTButtonEvent) (string, error) {
-	fmt.Printf("%#v\n", event)
+type ButtonClickedEvent struct {
+	ClickType string `json:"clickType"`
+}
+
+type DeviceEvent struct {
+	ButtonClicked ButtonClickedEvent `json:"buttonClicked"`
+}
+
+type IoTClickEvent struct {
+	DeviceEvent DeviceEvent `json:"deviceEvent"`
+}
+
+type AkashiStampParams struct {
+	Token    string `json:"token"`
+	Type     int    `json:"type"`
+	Timezone string `json:"timezone"`
+}
+
+type AkashiResponse struct {
+	Success bool `json:"success"`
+}
+
+type ClickType int
+
+const (
+	ClickTypeSingle ClickType = iota
+	ClickTypeDouble
+	ClickTypeLong
+)
+
+type Recorder interface {
+	Do(context.Context, ClickType) error
+}
+
+type AkashiRecorder struct {
+	BaseURL string
+	CorpID  string
+	Token   string
+}
+
+func (rec AkashiRecorder) Do(ctx context.Context, cType ClickType) error {
+	const (
+		// means "出勤" in Akashi API.
+		PunchIn = 11
+
+		// means "退勤" in Akashi API.
+		PunchOut = 12
+	)
+
+	var t int
+	switch cType {
+	case ClickTypeSingle, ClickTypeLong:
+		t = PunchIn
+	case ClickTypeDouble:
+		t = PunchOut
+	}
+
+	params := AkashiStampParams{
+		Token:    rec.Token,
+		Type:     t,
+		Timezone: "+09:00",
+	}
+
+	jsonParams, err := json.Marshal(params)
+	if err != nil {
+		return err
+	}
+
+	url := rec.buildURL()
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonParams))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(body))
+
+	status := resp.StatusCode
+	if status != 200 {
+		return fmt.Errorf("status code was not 200: %d", status)
+	}
+
+	var ar AkashiResponse
+	err = json.Unmarshal(body, &ar)
+	if err != nil {
+		return err
+	}
+
+	if !ar.Success {
+		return errors.New("Something error from Akashi")
+	}
+
+	return nil
+}
+
+func (rec AkashiRecorder) buildURL() string {
+	return fmt.Sprintf("%s/%s/stamps", rec.BaseURL, rec.CorpID)
+}
+
+type Akapun struct {
+	Recorder Recorder
+}
+
+func (akapun Akapun) HandleRequest(
+	ctx context.Context,
+	event IoTClickEvent,
+) (string, error) {
+	var cType ClickType
+	switch t := event.DeviceEvent.ButtonClicked.ClickType; t {
+	case "SINGLE":
+		cType = ClickTypeSingle
+	case "DOUBLE":
+		cType = ClickTypeDouble
+	case "LONG":
+		cType = ClickTypeLong
+	default:
+		return "NG", fmt.Errorf("unknown click type was given: %s", t)
+	}
+
+	if err := akapun.Recorder.Do(ctx, cType); err != nil {
+		return "NG", err
+	}
 
 	return "OK", nil
 }
 
 func main() {
-	lambda.Start(HandleRequest)
+	const AkashiURL = "https://atnd.ak4.jp/api/cooperation"
+
+	corpID := os.Getenv("AKASHI_CORP_ID")
+	token := os.Getenv("AKASHI_TOKEN")
+
+	akapun := Akapun{
+		Recorder: AkashiRecorder{
+			BaseURL: AkashiURL,
+			CorpID:  corpID,
+			Token:   token,
+		},
+	}
+
+	lambda.Start(akapun.HandleRequest)
 }

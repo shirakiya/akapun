@@ -1,0 +1,29 @@
+{
+  "deviceEvent": {
+    "buttonClicked": {
+      "clickType": "SINGLE",
+      "reportedTime": "2019-07-08T12:38:25.312Z"
+    }
+  },
+  "deviceInfo": {
+    "attributes": {
+      "deviceTemplateName": "InvokeAkapun",
+      "projectName": "Home",
+      "placementName": "akapun",
+      "projectRegion": "ap-northeast-1"
+    },
+    "deviceId": "GXXXXXXXXXXXXXXX",
+    "remainingLife": 99.4,
+    "type": "button"
+  },
+  "placementInfo": {
+    "attributes": {
+      "Owner": "shirakiya"
+    },
+    "devices": {
+      "InvokeAkapun": "GXXXXXXXXXXXXXXX"
+    },
+    "projectName": "Home",
+    "placementName": "akapun"
+  }
+}
