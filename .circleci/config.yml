@@ -1,0 +1,59 @@
+version: 2.1
+executors:
+  golang:
+    docker:
+      - image: circleci/golang:1.16.2
+    working_directory: ~/repo
+commands:
+  restore_go_cache:
+    steps:
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+  download_mod:
+    steps:
+      - run:
+          name: Install Dependencies
+          command: go mod download
+  save_go_cache:
+    steps:
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+jobs:
+  test:
+    executor: golang
+    steps:
+      - checkout
+      - restore_go_cache
+      - download_mod
+      - save_go_cache
+      - run:
+          name: Run tests
+          command: |
+            mkdir -p /tmp/test-reports
+            gotestsum --junitfile /tmp/test-reports/unit-tests.xml
+      - store_test_results:
+          path: /tmp/test-reports
+  build:
+    executor: golang
+    steps:
+      - checkout
+      - restore_go_cache
+      - run:
+          name: Build
+          command: make go/build
+  lint:
+    executor: golang
+    steps:
+      - checkout
+      - restore_go_cache
+      - download_mod
+      - save_go_cache
+      - run:
+          name: Install golangci-lint
+          command: curl -L https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.35.2
+      - run:
+          name: Run lint
+          command: go/lint
