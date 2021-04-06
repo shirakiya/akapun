@@ -30,4 +30,4 @@ zip: go/build
 upload:
 	echo "Show a sample command to upload a zip package to Lambda function"
 	echo "aws lambda update-function-code --function-name akapun --zip-file fileb://function.zip"
-	echo "aws lambda update-function-configuration --function-name akapun --environment Variables={AKASHI_CORP_ID=string\,AKASHI_TOKEN=string}"
+	echo "aws lambda update-function-configuration --function-name akapun --environment Variables={AKASHI_CORP_ID=<akashi-corp-id>\,AKASHI_TOKEN=<akashi-token>\,ROLLBAR_TOKEN=<rollbar-token>}"

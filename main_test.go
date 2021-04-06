@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -300,6 +301,14 @@ func TestAkapun_HandleRequest(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if err := recover(); err != nil {
+					if w, g := tt.want.errMsg, fmt.Sprintf("%s", err); w != g {
+						t.Fatalf("Err: want %s, got %s", w, g)
+					}
+				}
+			}()
+
 			rec := &mockRecorder{
 				err: tt.arrange.err,
 			}
@@ -307,12 +316,7 @@ func TestAkapun_HandleRequest(t *testing.T) {
 				Recorder: rec,
 			}
 
-			out, err := akapun.HandleRequest(ctx, tt.arrange.event)
-			if err != nil {
-				if w, g := tt.want.errMsg, err.Error(); w != g {
-					t.Fatalf("Err: want %s, got %s", w, g)
-				}
-			}
+			out, _ := akapun.HandleRequest(ctx, tt.arrange.event)
 
 			if w, g := tt.want.out, out; w != g {
 				t.Fatalf("Output: want %s, got %s", w, g)

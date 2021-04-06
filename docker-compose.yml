@@ -13,3 +13,4 @@ services:
       - RUN_CONTEXT=
       - AKASHI_CORP_ID
       - AKASHI_TOKEN
+      - ROLLBAR_TOKEN

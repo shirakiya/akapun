@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/rollbar/rollbar-go"
 )
 
 type ButtonClickedEvent struct {
@@ -140,29 +141,39 @@ func (akapun Akapun) HandleRequest(
 	case "LONG":
 		cType = ClickTypeLong
 	default:
-		return "NG", fmt.Errorf("unknown click type was given: %s", t)
+		panic(fmt.Errorf("unknown click type was given: %s", t))
 	}
 
 	if err := akapun.Recorder.Do(ctx, cType); err != nil {
-		return "NG", err
+		panic(err)
 	}
 
 	return "OK", nil
+}
+
+func setupRollbar(token string) {
+	rollbar.SetToken(token)
+	rollbar.SetEnvironment("production")
+	rollbar.SetServerHost("AWS Lambda")
+	rollbar.SetServerRoot("github.com/shirakiya/akapun")
 }
 
 func main() {
 	const AkashiURL = "https://atnd.ak4.jp/api/cooperation"
 
 	corpID := os.Getenv("AKASHI_CORP_ID")
-	token := os.Getenv("AKASHI_TOKEN")
+	akashiToken := os.Getenv("AKASHI_TOKEN")
+	rollbarToken := os.Getenv("ROLLBAR_TOKEN")
+
+	setupRollbar(rollbarToken)
 
 	akapun := Akapun{
 		Recorder: AkashiRecorder{
 			BaseURL: AkashiURL,
 			CorpID:  corpID,
-			Token:   token,
+			Token:   akashiToken,
 		},
 	}
 
-	lambda.Start(akapun.HandleRequest)
+	lambda.Start(rollbar.LambdaWrapper(akapun.HandleRequest))
 }
