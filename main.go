@@ -89,6 +89,8 @@ func (rec AkashiRecorder) Do(ctx context.Context, cType ClickType) error {
 		return err
 	}
 
+	req.Header.Add("Content-Type", "application/json")
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
