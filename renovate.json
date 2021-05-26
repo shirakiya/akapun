@@ -8,5 +8,6 @@
     "after 7pm",
     "before 12pm"
   ],
-  "timezone": "Asia/Tokyo"
+  "timezone": "Asia/Tokyo",
+  "postUpdateOptions": ["gomodTidy"]
 }
