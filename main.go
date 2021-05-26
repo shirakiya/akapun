@@ -10,21 +10,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/rollbar/rollbar-go"
 )
-
-type ButtonClickedEvent struct {
-	ClickType string `json:"clickType"`
-}
-
-type DeviceEvent struct {
-	ButtonClicked ButtonClickedEvent `json:"buttonClicked"`
-}
-
-type IoTClickEvent struct {
-	DeviceEvent DeviceEvent `json:"deviceEvent"`
-}
 
 type AkashiStampParams struct {
 	Token    string `json:"token"`
@@ -132,7 +121,7 @@ type Akapun struct {
 
 func (akapun Akapun) HandleRequest(
 	ctx context.Context,
-	event IoTClickEvent,
+	event events.IoTOneClickEvent,
 ) (string, error) {
 	var cType ClickType
 	switch t := event.DeviceEvent.ButtonClicked.ClickType; t {

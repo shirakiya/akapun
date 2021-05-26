@@ -11,6 +11,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -20,7 +21,7 @@ func TestIoTClickEventCanParseEventJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var event IoTClickEvent
+	var event events.IoTOneClickEvent
 
 	if err := json.NewDecoder(f).Decode(&event); err != nil {
 		t.Fatal(err)
@@ -201,7 +202,7 @@ func TestAkapun_HandleRequest(t *testing.T) {
 	ctx := context.Background()
 
 	type arrange struct {
-		event IoTClickEvent
+		event events.IoTOneClickEvent
 		err   error
 	}
 
@@ -219,9 +220,9 @@ func TestAkapun_HandleRequest(t *testing.T) {
 		{
 			name: "single push",
 			arrange: arrange{
-				event: IoTClickEvent{
-					DeviceEvent: DeviceEvent{
-						ButtonClicked: ButtonClickedEvent{
+				event: events.IoTOneClickEvent{
+					DeviceEvent: events.IoTOneClickDeviceEvent{
+						ButtonClicked: events.IoTOneClickButtonClicked{
 							ClickType: "SINGLE",
 						},
 					},
@@ -235,9 +236,9 @@ func TestAkapun_HandleRequest(t *testing.T) {
 		{
 			name: "double push",
 			arrange: arrange{
-				event: IoTClickEvent{
-					DeviceEvent: DeviceEvent{
-						ButtonClicked: ButtonClickedEvent{
+				event: events.IoTOneClickEvent{
+					DeviceEvent: events.IoTOneClickDeviceEvent{
+						ButtonClicked: events.IoTOneClickButtonClicked{
 							ClickType: "DOUBLE",
 						},
 					},
@@ -251,9 +252,9 @@ func TestAkapun_HandleRequest(t *testing.T) {
 		{
 			name: "long push",
 			arrange: arrange{
-				event: IoTClickEvent{
-					DeviceEvent: DeviceEvent{
-						ButtonClicked: ButtonClickedEvent{
+				event: events.IoTOneClickEvent{
+					DeviceEvent: events.IoTOneClickDeviceEvent{
+						ButtonClicked: events.IoTOneClickButtonClicked{
 							ClickType: "LONG",
 						},
 					},
@@ -267,9 +268,9 @@ func TestAkapun_HandleRequest(t *testing.T) {
 		{
 			name: "return error if unknown click type is given",
 			arrange: arrange{
-				event: IoTClickEvent{
-					DeviceEvent: DeviceEvent{
-						ButtonClicked: ButtonClickedEvent{
+				event: events.IoTOneClickEvent{
+					DeviceEvent: events.IoTOneClickDeviceEvent{
+						ButtonClicked: events.IoTOneClickButtonClicked{
 							ClickType: "unknown-type",
 						},
 					},
@@ -283,9 +284,9 @@ func TestAkapun_HandleRequest(t *testing.T) {
 		{
 			name: "return error if recorder returns error",
 			arrange: arrange{
-				event: IoTClickEvent{
-					DeviceEvent: DeviceEvent{
-						ButtonClicked: ButtonClickedEvent{
+				event: events.IoTOneClickEvent{
+					DeviceEvent: events.IoTOneClickDeviceEvent{
+						ButtonClicked: events.IoTOneClickButtonClicked{
 							ClickType: "SINGLE",
 						},
 					},
