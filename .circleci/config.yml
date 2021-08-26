@@ -1,9 +1,14 @@
 version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
+
 executors:
   golang:
     docker:
       - image: circleci/golang:1.17.0
     working_directory: ~/repo
+
 commands:
   restore_go_cache:
     steps:
@@ -21,6 +26,7 @@ commands:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+
 jobs:
   test:
     executor: golang
@@ -58,7 +64,7 @@ jobs:
       - download_mod
       - save_go_cache
       - run:
-          name: Install golangci-lint
+          name: Install golangci-lintgg
           command: curl -L https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
       - run:
           name: Run lint
@@ -71,6 +77,34 @@ jobs:
       - run:
           name: Build
           command: make go/build
+      - run:
+          name: mkdir workspace
+          command: mkdir -p /tmp/workspace
+      - run:
+          name: Make zip
+          command: zip /tmp/workspace/function.zip main
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths: function.zip
+      - store_artifacts:
+          path: /tmp/workspace/function.zip
+  deploy:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - aws-cli/install
+      - run:
+          name: apply environments to Lambda function
+          command: |-
+            aws lambda update-function-configuration \
+              --function-name akapun \
+              --environment Variables={AKASHI_CORP_ID=${AKASHI_CORP_ID}\,AKASHI_TOKEN=${AKASHI_TOKEN}\,ROLLBAR_TOKEN=${ROLLBAR_TOKEN}}
+      - run:
+          name: deploy Lambda function
+          command: aws lambda update-function-code --function-name akapun --zip-file fileb:///tmp/workspace/function.zip
+
 workflows:
   version: 2
   main:
@@ -79,3 +113,14 @@ workflows:
       - fmt
       - lint
       - build
+      - deploy:
+          context:
+            - aws-akashi-button
+          requires:
+            - test
+            - fmt
+            - lint
+            - build
+          filters:
+            branches:
+              only: main
