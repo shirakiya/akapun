@@ -64,8 +64,8 @@ jobs:
       - download_mod
       - save_go_cache
       - run:
-          name: Install golangci-lintgg
-          command: curl -L https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.35.2
+          name: Install golangci-lint
+          command: curl -L https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.42.0
       - run:
           name: Run lint
           command: make go/lint
