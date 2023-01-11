@@ -113,14 +113,17 @@ workflows:
       - fmt
       - lint
       - build
-      - deploy:
-          context:
-            - aws-akashi-button
-          requires:
-            - test
-            - fmt
-            - lint
-            - build
-          filters:
-            branches:
-              only: main
+      # There is no need to deploy akapun anymore because it is not currently in use.
+      # So the environment variables have already been removed.
+      # If resume to use, it is required to set new environment variables.
+      # - deploy:
+      #     context:
+      #       - aws-akashi-button
+      #     requires:
+      #       - test
+      #       - fmt
+      #       - lint
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: main
